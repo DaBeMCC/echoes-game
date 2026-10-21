@@ -106,3 +106,19 @@ Se crea con **Echoes > Tormenta (lluvia, rayos y truenos)**, en el grupo `-- WEA
   - _Para el playtesting_: comprobar si con focos rotos el tester sigue sabiendo a dónde ir.
 
 Los sonidos de lluvia y trueno los genera el propio script como WAV (`Assets/Echoes/Weather`), porque el proyecto no tenía ninguno.
+
+## Extra: niebla estilo Silent Hill
+
+Se crea con **Echoes > Niebla Silent Hill**, en el grupo `-- FOG --`.
+
+- **Niebla lineal gris** (`SilentHillFog`): se ve nítido hasta 4 m y a partir de 60 m todo es niebla (el Player mide 4,5 m, así que se ven unos 2 farolillos por delante). No hay cielo: el fondo de la cámara es del color de la niebla y el horizonte desaparece.
+- **Bancos de niebla** que flotan alrededor del Player. Son partículas suaves que no se cortan con el suelo y se desvanecen al acercarse a la cámara.
+- **Volume propio**: grano de película, saturación −35 y algo de contraste.
+- **Los relámpagos aclaran la niebla entera**, como en el juego.
+
+**Rendimiento.** Es el mismo truco que usó Silent Hill en PS1: lo que queda detrás de la niebla no se dibuja. La cámara corta a 70 m, y árboles, hierba y sombras se limitan a esa distancia. Medido en Play con la misma vista:
+
+| | Sin niebla | Con niebla |
+|---|---|---|
+| Draw calls | 716 | 187 (−74 %) |
+| Triángulos | ~478.000 | ~151.000 (−68 %) |

@@ -38,6 +38,7 @@ public class StormController : MonoBehaviour
     Transform player;
     LanternFlicker[] lanterns;
     float baseFog;
+    Color baseFogColor;
 
     void Start()
     {
@@ -46,6 +47,7 @@ public class StormController : MonoBehaviour
         lanterns = FindObjectsByType<LanternFlicker>(FindObjectsInactive.Exclude);
 
         baseFog = RenderSettings.fogDensity;
+        baseFogColor = RenderSettings.fogColor;
         RenderSettings.fogDensity = baseFog * fogMultiplier; // la lluvia cierra la distancia de visión
         if (flashLight != null) flashLight.enabled = false;
         if (bolt != null) bolt.enabled = false;
@@ -111,6 +113,8 @@ public class StormController : MonoBehaviour
 
     void SetFlash(float level)
     {
+        // El relámpago ilumina también la niebla (y con ella el fondo si hay SilentHillFog).
+        RenderSettings.fogColor = Color.Lerp(baseFogColor, new Color(0.85f, 0.9f, 1f), Mathf.Clamp01(level) * 0.6f);
         if (flashLight == null) return;
         flashLight.enabled = level > 0f;
         flashLight.intensity = flashIntensity * level;

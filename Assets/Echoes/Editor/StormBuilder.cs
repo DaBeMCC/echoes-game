@@ -12,7 +12,7 @@ using UnityEngine.Rendering;
 /// </summary>
 public static class StormBuilder
 {
-    const string Folder = "Assets/Echoes/Weather";
+    internal const string Folder = "Assets/Echoes/Weather";
     const string WeatherGroup = "-- WEATHER --";
     const int SampleRate = 22050;
 
@@ -184,7 +184,7 @@ public static class StormBuilder
         return lr;
     }
 
-    static Material ParticleMaterial(string file, Texture2D texture, Color color)
+    internal static Material ParticleMaterial(string file, Texture2D texture, Color color)
     {
         string path = $"{Folder}/{file}";
         var mat = AssetDatabase.LoadAssetAtPath<Material>(path);
