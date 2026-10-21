@@ -17,7 +17,7 @@ public static class PathBuilder
     const string TexturePath = TerrainFolder + "/Path_Dirt.png";
     const string LayerPath = TerrainFolder + "/Path_Dirt.terrainlayer";
     const string GroundLayerPath = "Assets/Polytope Studio/Lowpoly_Demos/Environment_Free/Helpers/Ground_Layer_01.terrainlayer";
-    const string PathObjectName = "Camino";
+    internal const string PathObjectName = "Camino";
 
     const float Width = 3f;          // ancho del camino en metros
     const float Falloff = 1.5f;      // borde difuminado a cada lado
@@ -104,7 +104,7 @@ public static class PathBuilder
     }
 
     // Catmull-Rom a través de los puntos, muestreado cada `step` metros.
-    static List<Vector3> SampleSpline(List<Vector3> pts, float step)
+    internal static List<Vector3> SampleSpline(List<Vector3> pts, float step)
     {
         var result = new List<Vector3>();
         for (int i = 0; i < pts.Count - 1; i++)
