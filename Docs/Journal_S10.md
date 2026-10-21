@@ -92,3 +92,17 @@ Antes de iluminar, el terreno era una masa uniforme: nada indicaba hacia dónde 
 - **Echoes > Iluminación del camino (S10)**: vuelve a montar las luces, las cámaras, la zona de tensión y el Volume a partir del camino.
 - **Echoes > Capturas antes y después (S10)**: rehace las dos capturas.
 - **Echoes > Kata S10: Habitación emocional**: rehace la escena de la kata y sus capturas.
+
+## Extra: tormenta
+
+Se crea con **Echoes > Tormenta (lluvia, rayos y truenos)**, en el grupo `-- WEATHER --`.
+
+- **Lluvia**: partículas que siguen al Player, con un sonido de lluvia en bucle. La niebla se espesa durante la tormenta.
+- **Farolillos que parpadean** (`LanternFlicker`): oscilación suave y, de vez en cuando, un corte brusco. Los rojos de la zona de tensión son más inestables.
+- **Rayos y truenos** (`StormController`):
+  - Cae un relámpago cada 7–18 s, con destello de luz y rayo visible.
+  - El trueno suena con más retraso cuanto más lejos cae el rayo.
+- **Focos rotos**: casi la mitad de los rayos cae sobre un farolillo cercano, que suelta chispas y se apaga para siempre. Nunca se rompe más del 35 % para que el camino siga leyéndose.
+  - _Para el playtesting_: comprobar si con focos rotos el tester sigue sabiendo a dónde ir.
+
+Los sonidos de lluvia y trueno los genera el propio script como WAV (`Assets/Echoes/Weather`), porque el proyecto no tenía ninguno.

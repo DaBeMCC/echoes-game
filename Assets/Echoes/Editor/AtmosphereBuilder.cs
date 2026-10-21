@@ -187,6 +187,7 @@ public static class AtmosphereBuilder
         light.intensity = intensity;
         light.range = 38f;
         light.shadows = LightShadows.None; // muchas luces con sombra cuestan caro
+        StormBuilder.SetupFlicker(lantern.gameObject, light, r); // parpadeo y rotura con los rayos
     }
 
     static Material LanternMaterial()
@@ -209,6 +210,7 @@ public static class AtmosphereBuilder
         var accent = lighting.Find("Accent Light");
         foreach (var light in Object.FindObjectsByType<Light>(FindObjectsInactive.Exclude))
         {
+            if (light.transform.root.name == "-- WEATHER --") continue; // el relámpago de la tormenta
             bool own = light.transform.parent == lighting || light.transform.IsChildOf(accent);
             if (own) continue;
             Undo.RecordObject(light.gameObject, "Iluminación");
