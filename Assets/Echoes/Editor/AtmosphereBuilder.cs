@@ -126,7 +126,7 @@ public static class AtmosphereBuilder
 
             // Alterna los farolillos a cada lado del camino.
             Vector3 dir = (path[i] - path[i - 1]).normalized;
-            Vector3 side = Vector3.Cross(Vector3.up, dir) * (index % 2 == 0 ? 2.5f : -2.5f);
+            Vector3 side = Vector3.Cross(Vector3.up, dir) * (index % 2 == 0 ? 1f : -1f) * (PathBuilder.HalfWidth + 2.5f); // fuera del camino
             Vector3 basePos = path[i] + side;
             basePos.y = terrain.SampleHeight(basePos) + terrain.GetPosition().y;
 

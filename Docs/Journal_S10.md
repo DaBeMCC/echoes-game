@@ -19,6 +19,7 @@ En el "antes" el camino no se distingue del resto del bosque. En el "después" e
   - **Fill Light**: luz direccional violácea muy tenue (0,12) y sin sombras, desde el lado opuesto, más el ambiente Trilight y la niebla azul. Fuera del camino se ve poco, pero nunca negro.
   - **Accent Light**: 29 farolillos cálidos a lo largo del camino, cada 24 m y alternando lados, más el **Goal Light**, un foco cian de intensidad 400 al final del camino con su baliza.
 - [x] **El camino crítico es la zona más iluminada**: la luna está baja a propósito para que los farolillos ganen el contraste. El cálido sobre frío dirige la mirada.
+  - El camino mide 7,5 m de ancho (3 m × el `playerScale` 2,5 del Player), está despejado de árboles y hierba, y los farolillos quedan en sus bordes.
 - [x] **CinemachineCamera siguiendo al Player, con Dead Zone y Damping**
   - `-- CAMERAS -- / CM_PlayerCam` sigue al `CameraPivot` con un **Position Composer**: Dead Zone de 0,06 × 0,06 y Damping de (0,35, 0,25, 0,35).
   - La rotación usa *Rotate With Follow Target* sin retraso, para que el ratón responda al instante.

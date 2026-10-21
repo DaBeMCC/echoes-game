@@ -19,8 +19,14 @@ public static class PathBuilder
     const string GroundLayerPath = "Assets/Polytope Studio/Lowpoly_Demos/Environment_Free/Helpers/Ground_Layer_01.terrainlayer";
     internal const string PathObjectName = "Camino";
 
-    const float Width = 3f;          // ancho del camino en metros
-    const float Falloff = 1.5f;      // borde difuminado a cada lado
+    // Medidas para una persona de 1,8 m; se multiplican por el playerScale del Player.
+    const float BaseWidth = 3f;      // ancho del camino en metros
+    const float BaseFalloff = 1.5f;  // borde difuminado a cada lado
+
+    static float scale = 1f; // se lee del Player al empezar a trazar
+    static float Width => BaseWidth * scale;
+    static float Falloff => BaseFalloff * scale;
+    internal static float HalfWidth => BaseWidth * PlayerScale() * 0.5f;
     const float FlattenAmount = 0.8f; // 0 = no tocar el relieve, 1 = aplanar del todo
 
     [MenuItem("Echoes/Crear camino")]
@@ -33,6 +39,7 @@ public static class PathBuilder
             return;
         }
 
+        scale = PlayerScale();
         var pathGo = GameObject.Find(PathObjectName);
         if (pathGo == null) pathGo = CreateDefaultWaypoints(terrain);
 
@@ -54,6 +61,7 @@ public static class PathBuilder
         FlattenHeights(terrain, samples);
         PaintAlphamap(terrain, samples, layer);
         ClearDetails(terrain, samples);
+        ClearTrees(terrain, samples);
 
         // Coloca los puntos de control sobre el relieve resultante.
         foreach (Transform child in pathGo.transform)
@@ -68,6 +76,13 @@ public static class PathBuilder
         EditorSceneManager.MarkSceneDirty(pathGo.scene);
         Selection.activeGameObject = pathGo;
         Debug.Log($"[Echoes] Camino trazado con {waypoints.Count} puntos. Mueve los hijos de '{PathObjectName}' y vuelve a usar el menú para retocarlo.");
+    }
+
+    // Escala del personaje: así el camino tiene el ancho que pide el Player (2,5 = 4,5 m de alto).
+    static float PlayerScale()
+    {
+        var player = Object.FindFirstObjectByType<PlayerController>();
+        return player != null ? player.playerScale : 1f;
     }
 
     static GameObject CreateDefaultWaypoints(Terrain terrain)
@@ -257,6 +272,28 @@ public static class PathBuilder
             }
             data.SetDetailLayer(r.x, r.y, layer, details);
         }
+    }
+
+    // Quita los árboles del terreno que caen sobre el camino (y un margen para que las copas no lo tapen).
+    static void ClearTrees(Terrain terrain, List<Vector3> samples)
+    {
+        var data = terrain.terrainData;
+        Vector3 tPos = terrain.GetPosition();
+        Vector3 size = data.size;
+        float clearance = Width * 0.5f + Falloff + 2f * scale;
+
+        var kept = new List<TreeInstance>();
+        foreach (var tree in data.treeInstances)
+        {
+            float wx = tPos.x + tree.position.x * size.x;
+            float wz = tPos.z + tree.position.z * size.z;
+            if (DistanceToPath(samples, wx, wz, out _) > clearance) kept.Add(tree);
+        }
+        int removed = data.treeInstanceCount - kept.Count;
+        if (removed == 0) return;
+        data.treeInstances = kept.ToArray();
+        terrain.Flush();
+        Debug.Log($"[Echoes] {removed} árboles quitados del camino.");
     }
 
     // Devuelve el índice de la capa de tierra en el terreno, creándola si hace falta.
