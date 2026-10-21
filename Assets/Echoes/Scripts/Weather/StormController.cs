@@ -4,9 +4,10 @@ using UnityEngine;
 
 /// <summary>
 /// Tormenta: lluvia que sigue al Player, relámpagos cada cierto tiempo y truenos con el
-/// retraso que corresponde a la distancia. Algunos rayos caen sobre un farolillo cercano y
-/// lo funden (ver <see cref="LanternFlicker.Break"/>), sin apagar nunca más de
-/// <see cref="maxBrokenFraction"/> del camino para que siga siendo legible.
+/// retraso que corresponde a la distancia. Los farolillos se van rompiendo (por rayos y por
+/// desgaste con el tiempo, ver <see cref="LanternFlicker.Break"/>) y con cada uno que se
+/// rompe el mundo se oscurece: niebla, ambiente y luna pierden luz. Al final solo queda la
+/// linterna del Player.
 /// </summary>
 public class StormController : MonoBehaviour
 {
@@ -27,10 +28,20 @@ public class StormController : MonoBehaviour
     public AudioClip[] thunderClips;
 
     [Header("Farolillos")]
-    [Range(0f, 1f)] public float breakChance = 0.45f;
-    [Range(0f, 1f)] public float maxBrokenFraction = 0.35f;
+    [Range(0f, 1f)] public float breakChance = 0.6f;
+    [Tooltip("Fracción de farolillos que pueden llegar a romperse.")]
+    [Range(0f, 1f)] public float maxBrokenFraction = 0.85f;
     public float breakRadius = 120f;
+    [Tooltip("Además de los rayos, cada cuánto se funde uno solo (s).")]
+    public Vector2 secondsBetweenBurnouts = new Vector2(18f, 35f);
+    [Tooltip("Radio del apagón momentáneo de los farolillos vecinos al romperse uno (m).")]
+    public float blackoutRadius = 50f;
     public ParticleSystem sparks;
+
+    [Header("Oscuridad")]
+    [Tooltip("Cuánta luz se pierde cuando se han roto todos los que se pueden romper (0-1).")]
+    [Range(0f, 1f)] public float maxDarkness = 0.85f;
+    public float darkenSpeed = 0.25f;
 
     [Header("Ambiente")]
     public float fogMultiplier = 1.6f;
@@ -38,7 +49,11 @@ public class StormController : MonoBehaviour
     Transform player;
     LanternFlicker[] lanterns;
     float baseFog;
-    Color baseFogColor;
+    Color baseFogColor, baseSky, baseEquator, baseGround, baseAmbient;
+    float baseSunIntensity;
+    float darkness, flashLevel;
+
+    public float Darkness => darkness;
 
     void Start()
     {
@@ -48,20 +63,53 @@ public class StormController : MonoBehaviour
 
         baseFog = RenderSettings.fogDensity;
         baseFogColor = RenderSettings.fogColor;
+        baseSky = RenderSettings.ambientSkyColor;
+        baseEquator = RenderSettings.ambientEquatorColor;
+        baseGround = RenderSettings.ambientGroundColor;
+        baseAmbient = RenderSettings.ambientLight;
+        if (RenderSettings.sun != null) baseSunIntensity = RenderSettings.sun.intensity;
+
         RenderSettings.fogDensity = baseFog * fogMultiplier; // la lluvia cierra la distancia de visión
         if (flashLight != null) flashLight.enabled = false;
         if (bolt != null) bolt.enabled = false;
         if (rainAudio != null && !rainAudio.isPlaying) rainAudio.Play();
 
         StartCoroutine(StormLoop());
+        StartCoroutine(BurnoutLoop());
     }
 
     void OnDisable() => RenderSettings.fogDensity = baseFog > 0f ? baseFog : RenderSettings.fogDensity;
+
+    void Update()
+    {
+        // Cada farolillo roto acerca el mundo a la oscuridad total (suave, no de golpe).
+        darkness = Mathf.MoveTowards(darkness, TargetDarkness(), darkenSpeed * Time.deltaTime);
+        float light = 1f - darkness;
+
+        Color fog = baseFogColor * light;
+        fog.a = 1f;
+        // El relámpago ilumina también la niebla (y con ella el fondo si hay SilentHillFog).
+        RenderSettings.fogColor = Color.Lerp(fog, new Color(0.85f, 0.9f, 1f), Mathf.Clamp01(flashLevel) * 0.6f);
+        RenderSettings.ambientSkyColor = baseSky * light;
+        RenderSettings.ambientEquatorColor = baseEquator * light;
+        RenderSettings.ambientGroundColor = baseGround * light;
+        RenderSettings.ambientLight = baseAmbient * light;
+        if (RenderSettings.sun != null) RenderSettings.sun.intensity = baseSunIntensity * light;
+    }
 
     void LateUpdate()
     {
         if (rain != null && player != null)
             rain.transform.position = player.position + Vector3.up * rainHeight;
+    }
+
+    float TargetDarkness()
+    {
+        if (lanterns == null || lanterns.Length == 0) return 0f;
+        int broken = 0;
+        foreach (var l in lanterns) if (l != null && l.IsBroken) broken++;
+        float breakable = Mathf.Max(1f, lanterns.Length * maxBrokenFraction);
+        return Mathf.Clamp01(broken / breakable) * maxDarkness;
     }
 
     IEnumerator StormLoop()
@@ -71,6 +119,17 @@ public class StormController : MonoBehaviour
         {
             yield return Strike();
             yield return new WaitForSeconds(Random.Range(secondsBetweenStrikes.x, secondsBetweenStrikes.y));
+        }
+    }
+
+    // Desgaste: aunque no caiga un rayo, de vez en cuando un farolillo cercano se funde solo.
+    IEnumerator BurnoutLoop()
+    {
+        while (enabled)
+        {
+            yield return new WaitForSeconds(Random.Range(secondsBetweenBurnouts.x, secondsBetweenBurnouts.y));
+            var target = PickLantern();
+            if (target != null) StartCoroutine(BreakAfter(target, 0f));
         }
     }
 
@@ -113,8 +172,7 @@ public class StormController : MonoBehaviour
 
     void SetFlash(float level)
     {
-        // El relámpago ilumina también la niebla (y con ella el fondo si hay SilentHillFog).
-        RenderSettings.fogColor = Color.Lerp(baseFogColor, new Color(0.85f, 0.9f, 1f), Mathf.Clamp01(level) * 0.6f);
+        flashLevel = level;
         if (flashLight == null) return;
         flashLight.enabled = level > 0f;
         flashLight.intensity = flashIntensity * level;
@@ -137,6 +195,14 @@ public class StormController : MonoBehaviour
             sparks.Emit(60);
         }
         lantern.Break();
+
+        // La sobretensión deja a oscuras un momento a los farolillos de alrededor.
+        foreach (var l in lanterns)
+        {
+            if (l == null || l == lantern || l.IsBroken) continue;
+            float d = Vector3.Distance(l.transform.position, lantern.transform.position);
+            if (d < blackoutRadius) l.Blackout(Random.Range(0.6f, 1.6f) * (1f - d / blackoutRadius) + 0.3f);
+        }
     }
 
     // Un farolillo encendido cerca del Player, si aún se pueden romper más.

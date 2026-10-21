@@ -88,6 +88,7 @@ public static class PlayerBuilder
         controller.playerCamera = cam;
         controller.ApplyScale();
         SetupAudio(root);
+        FlashlightBuilder.AddTo(root);
 
         return root;
     }

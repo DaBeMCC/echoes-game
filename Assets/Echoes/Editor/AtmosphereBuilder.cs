@@ -211,6 +211,7 @@ public static class AtmosphereBuilder
         foreach (var light in Object.FindObjectsByType<Light>(FindObjectsInactive.Exclude))
         {
             if (light.transform.root.name == "-- WEATHER --") continue; // el relámpago de la tormenta
+            if (light.GetComponent<Flashlight>() != null) continue;      // la linterna del Player
             bool own = light.transform.parent == lighting || light.transform.IsChildOf(accent);
             if (own) continue;
             Undo.RecordObject(light.gameObject, "Iluminación");

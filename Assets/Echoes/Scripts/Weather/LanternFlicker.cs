@@ -24,6 +24,7 @@ public class LanternFlicker : MonoBehaviour
     float baseIntensity;
     float seed;
     float glitchUntil;
+    float blackoutUntil;
     MaterialPropertyBlock block;
 
     void Awake()
@@ -38,6 +39,7 @@ public class LanternFlicker : MonoBehaviour
         if (IsBroken) return;
 
         float t = Time.time;
+        if (t < blackoutUntil) { SetLevel(0f); return; }
         if (t > glitchUntil && Random.value < glitchesPerMinute / 60f * Time.deltaTime)
             glitchUntil = t + Random.Range(0.15f, 0.6f);
 
@@ -47,6 +49,12 @@ public class LanternFlicker : MonoBehaviour
         else
             level = 1f - flickerAmount + flickerAmount * Mathf.PerlinNoise(seed, t * flickerSpeed);
         SetLevel(level);
+    }
+
+    /// <summary>Apagón momentáneo (sobretensión al romperse un farolillo vecino).</summary>
+    public void Blackout(float seconds)
+    {
+        blackoutUntil = Mathf.Max(blackoutUntil, Time.time + seconds);
     }
 
     /// <summary>Funde el farolillo: chisporrotea un momento y se queda apagado.</summary>

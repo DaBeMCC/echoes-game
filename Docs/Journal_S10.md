@@ -122,3 +122,16 @@ Se crea con **Echoes > Niebla Silent Hill**, en el grupo `-- FOG --`.
 |---|---|---|
 | Draw calls | 716 | 187 (−74 %) |
 | Triángulos | ~478.000 | ~151.000 (−68 %) |
+
+## Extra: los focos se van rompiendo y la linterna
+
+- **Los farolillos se van rompiendo**: además de los rayos (que ahora rompen uno el 60 % de las veces), cada 18–35 s se funde uno cercano por desgaste. Pueden llegar a romperse hasta el 85 %.
+- **Al romperse uno se pone oscuro**:
+  - En el momento, los farolillos de alrededor (50 m) se apagan un instante por la sobretensión.
+  - Poco a poco, cada farolillo roto quita luz al mundo entero: niebla, ambiente y luna. Con todos rotos se pierde el 85 % de la luz (probado: la niebla pasa de gris 0,36 a 0,05 y la luna al 15 %).
+- **Linterna** (`Flashlight`, en la cámara del Player, dentro del prefab):
+  - **F** (o Y/Triángulo en mando) la enciende y apaga, con un clic.
+  - Sigue la mirada con un pequeño retraso, como si la llevaras en la mano.
+  - El haz tiene un *cookie* con centro, anillo y bordes irregulares, y proyecta sombras.
+
+Lectura para el playtesting: al principio el camino lo guían los farolillos. A medida que se rompen, el jugador depende de la linterna y el nivel se vuelve más tenso sin cambiar la geometría.
